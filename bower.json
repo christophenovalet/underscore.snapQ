@@ -1,0 +1,25 @@
+{
+    "name": "underscore.snapQ",
+    "version": "1.0.1",
+    "homepage": "https://github.com/chsneo/underscore.snapQ",
+    "authors": [
+        "christophe novalet <christophe@whatido.be>"
+    ],
+    "description": "Underscore Query mixins",
+    "keywords": [
+        "underscore",
+        "query",
+        "mixin"
+    ],
+
+    "license": "Apache",
+    "private": true,
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ]
+}
+
