@@ -1,7 +1,7 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.0'
+//  Version '1.0.2'
 
 (function () {
     _.mixin({
@@ -61,10 +61,53 @@
         //usage: _.findValues(array, [1,2,3], 'id')
         findMultiple: function (array, wantedValues, key) {
             return _.filter(array, function (item) { return wantedValues.indexOf(item[key]) != -1; })
+        },
+        //Converts arrays to comma delimted strings
+        toCommaString: function (array, property, delimiter) {
+            property = property || 'id';
+            delimiter = delimiter || ',';
+            return  _.pluck(array, property).join(delimiter);
+        },
+        //Toggles array values (usefull for checkbox lists)
+        addToggle: function (array, value, property) {
+            array = array || [];
+            var itemExists;
+
+            //check if array contains value
+            if (!property) {
+                itemExists = _.indexOf(array, function (item) {
+                    return item === value;
+                });
+
+                //yes remove it
+                if (itemExists > -1) {
+                    return _.filter(array, function (item) {
+                        return item !== value;
+                    })
+                }
+            } else {
+                itemExists = _.find(array, function (item) {
+                    return item[property] === value[property];
+                });
+
+                //yes remove it
+                if (itemExists) {
+                    return _.filter(array, function (item) {
+                        return item[property] !== value[property];
+                    })
+                }
+            }
+
+            //no add it
+            array.push(value);
+            return array;
+        },
+        //deletes array items
+        deleteItem : function (array, item) {
+            var i = array.indexOf(item);
+            if(i != -1) {
+                array.splice(i, 1);
+            }
         }
-
     });
-
 })();
-
-
