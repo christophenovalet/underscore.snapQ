@@ -181,6 +181,14 @@
                 }
             });
             return clone;
-        }
-    });
+        },
+
+        //adds leading zeros to a number, usefull for timecodes 00:00:00
+        leadingZero : function(value) {
+        value = Number(value) | 0;
+        return (value >= 10) ? value : '0' + value;
+    }
+
+
+});
 })();

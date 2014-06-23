@@ -120,7 +120,7 @@
         },
 
         //Move to snapT.js
-        //Extracts Hours from date string
+        //Extracts Hours from date string≤≤
         //Formats :  "13 juin 212, 15:00:00" OR "13 juin 212, 3:00:00 PM"
         getTime: function (string) {
             var hh = '00', mm = '00', ss = '00';
