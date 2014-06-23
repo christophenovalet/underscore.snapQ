@@ -1,7 +1,7 @@
 //  Underscore.snapQ
-//  (c) 2014 Christophe Novalet
+//  (c) 2014 Christophe Novalet with guest appearance from boblemarin
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.3'
+//  Version '1.0.4'
 
 (function () {
     _.mixin({
