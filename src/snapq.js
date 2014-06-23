@@ -1,7 +1,7 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.3'
+//  Version '1.0.4'
 
 (function () {
     _.mixin({
@@ -183,12 +183,64 @@
             return clone;
         },
 
+        // check the existence of a series of nested properties
+        // expressed as a comma-separated string
+        // some kind of recursive hasOwnProperty
+        //
+        // usage: _.hasDeep(myObject,'prop1.prop2.uh');
+        // -> [ true | false ]
+        //
+        // author: boblemarin
+        //
+        hasDeep: function (targetObject, propertyString) {
+            if (!targetObject && !propertyString) return false;
+
+            return (_.reduce(propertyString.split('.'),
+                function (memo, property) {
+                    if (memo.object.hasOwnProperty(property)) {
+                        memo.object = memo.object[property];
+                    } else {
+                        memo.result = false;
+                    }
+                    return memo;
+                }, {
+                    object: targetObject,
+                    result: true
+                }
+            ))['result'];
+        },
+
+        // gets the content of a nested property in the provided object,
+        // or returns the provided default value in case the target property is not defined
+        //
+        // usage: _.valueOrDefault(myObject, 'p1.p2.uh.chose', 'valeur par défault');
+        // -> [ ** | 'valeur par défault']
+        //
+        // author: boblemarin
+        //
+        valueOrDefault: function (targetObject, propertyString, defaultValue) {
+            if (!targetObject && !propertyString) return defaultValue;
+
+            var result = _.reduce(propertyString.split('.'),
+                function (memo, property) {
+                    if (memo.object.hasOwnProperty(property)) {
+                        memo.object = memo.object[property];
+                    } else {
+                        memo.result = false;
+                    }
+                    return memo;
+                }, {
+                    object: targetObject,
+                    result: true
+                }
+            );
+
+            return result.result ? result.object : defaultValue;
+        },
         //adds leading zeros to a number, usefull for timecodes 00:00:00
-        leadingZero : function(value) {
-        value = Number(value) | 0;
-        return (value >= 10) ? value : '0' + value;
-    }
-
-
-});
+        leadingZero: function (value) {
+            value = Number(value) | 0;
+            return (value >= 10) ? value : '0' + value;
+        }
+    });
 })();
