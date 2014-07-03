@@ -1,7 +1,7 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.4'
+//  Version '1.0.5'
 
 (function () {
     _.mixin({
