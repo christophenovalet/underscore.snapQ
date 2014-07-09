@@ -1,7 +1,7 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.5'
+//  Version '1.0.6'
 
 (function () {
     _.mixin({
@@ -51,6 +51,13 @@
                     obj[arg] = item[arg];
                 });
                 return obj;
+            });
+        },
+
+        //pushes multiple objects into an array
+        pushMultiple : function (array, arrayToPush) {
+            _.each(arrayToPush, function (item) {
+                array.push(item);
             });
         },
 
@@ -159,6 +166,19 @@
             return{ hh: hh, mm: mm, ss: ss }
         },
 
+        uid: function () {
+            return new Date().getTime();
+        },
+        //to be changed...
+        retry: function(func, cond, wait) {
+            var args = slice.call(arguments, 3);
+            if (cond()) {
+                func.apply(this, args);
+            } else {
+                _.delay.apply(this, [_.retry, wait, func, cond, wait].concat(args));
+            }
+        },
+
         //Returns elapsed seconds or milliseconds between 2 dates
         elapsedTime: function (olderDate, newerDate) {
 
@@ -168,6 +188,15 @@
             var result = (tbDate.getTime() - taDate.getTime());
 
             return { milliseconds: result, seconds: result / 1000 };
+        },
+
+        //Returns local JSON date without offset
+        toJSONLocalDateTime: function (date) {
+            var dt = new Date(date);
+            return new Date(dt.addMinutes(-(dt.getTimezoneOffset()))).toJSON();
+        },
+        toJSONLocalDate: function (date) {
+            return _.toJSONLocalDateTime(date).split('T')[0];
         },
 
         //Removes undefined properties from object
