@@ -1,10 +1,13 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.7'
+//  Version '1.0.9'
 
 (function () {
     _.mixin({
+
+        ///collection functions
+
         //Navigate to the next array item (rotation)
         nextItem: function (array, item) {
             var index = _.indexOf(array, item),
@@ -55,7 +58,7 @@
         },
 
         //pushes multiple objects into an array
-        pushMultiple : function (array, arrayToPush) {
+        pushMultiple: function (array, arrayToPush) {
             _.each(arrayToPush, function (item) {
                 array.push(item);
             });
@@ -126,6 +129,17 @@
             }
         },
 
+        match: function (collectionA, collectionB) {
+            if (!_.isArray(collectionA) || !_.isArray(collectionB)) return;
+
+            _.each(collectionA, function (item) {
+                item.$$match = !!_.findWhere(collectionB, {id: item.id});
+            });
+        },
+
+
+        ///Datetime functions
+
         //Move to snapT.js
         //Extracts Hours from date string
         //Formats :  "13 juin 212, 15:00:00" OR "13 juin 212, 3:00:00 PM"
@@ -166,17 +180,16 @@
             return{ hh: hh, mm: mm, ss: ss }
         },
 
-        uid: function () {
-            return new Date().getTime();
+        previousMonth: function (date) {
+            var CurrentDate = new Date(date);
+            CurrentDate.setMonth(CurrentDate.getMonth() - 1);
+            return CurrentDate;
         },
-        //to be changed...
-        retry: function(func, cond, wait) {
-            var args = slice.call(arguments, 3);
-            if (cond()) {
-                func.apply(this, args);
-            } else {
-                _.delay.apply(this, [_.retry, wait, func, cond, wait].concat(args));
-            }
+
+        nextMonth: function (date) {
+            var CurrentDate = new Date(date);
+            CurrentDate.setMonth(CurrentDate.getMonth() + 1);
+            return CurrentDate;
         },
 
         //Returns elapsed seconds or milliseconds between 2 dates
@@ -190,20 +203,168 @@
             return { milliseconds: result, seconds: result / 1000 };
         },
 
+        toJSONDateTime: function (dateString) {
+            var dt = new Date(dateString);
+
+            //check if date is valid here
+
+            return dt.toJSON();
+        },
+
         //Returns local JSON date without offset
         toJSONLocalDateTime: function (date) {
             var dt = new Date(date);
             return new Date(dt.addMinutes(-(dt.getTimezoneOffset()))).toJSON();
         },
+
         toJSONLocalDate: function (date) {
             return _.toJSONLocalDateTime(date).split('T')[0];
         },
+
+        getMonday: function (date) {
+            var d = new Date(date);
+            var day = d.getDay(),
+                diff = d.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+            return new Date(d.setDate(diff)).setHours(0, 0, 0, 0);
+        },
+
+        getLastSundayOf: function (year) {
+            var d = new Date(year, 11, 31);
+            if (d.getDay() == 6) {
+                return _.resetTime(d);
+            } else {
+                return _.resetTime(new Date(year, 11, 31 - d.getDay()));
+            }
+        },
+
+        getDayForWeeks: function (startDate, endDate, dayNum) {
+
+
+            if (dayNum > 6) return;
+
+            var d = new Date(startDate),
+                month = d.getMonth(),
+                e = new Date(endDate),
+                mondays = [];
+
+            d.setHours(0, 0, 0, 0);
+            e.setHours(0, 0, 0, 0);
+
+            d.setDate(dayNum);
+
+            // Get the first Monday in the month
+            while (d.getDay() !== dayNum) {
+                d.setDate(d.getDate() + 1);
+            }
+
+            // Get all the other Mondays in the month
+            while (d <= e) {
+                mondays.push(new Date(d.getTime()));
+                d.setDate(d.getDate() + 7);
+            }
+
+            return mondays;
+        },
+
+        resetTime: function (date) {
+            var d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+
+            return d;
+        },
+
+        addDays: function (date, days) {
+            var startDate = new Date(date);
+            startDate.addDays(days);
+            return startDate;
+        },
+
+        compareMonth: function (sourceDate, targetDate) {
+            return sourceDate.getMonth() == targetDate.getMonth() && sourceDate.getFullYear() == targetDate.getFullYear();
+        },
+
+        compareYear: function (sourceDate, targetDate) {
+            return sourceDate.getFullYear() == targetDate.getFullYear();
+        },
+
+        tomorrow: function () {
+            var date = new Date();
+            return date.setDate(+1);
+        },
+
+        yesterday: function () {
+            var date = new Date();
+            return date.setDate(-1);
+        },
+
+
+        ///Utility functions
+
+        uid: function () {
+            return new Date().getTime();
+        },
+        //to be changed...
+        retry: function (func, cond, wait) {
+            var args = slice.call(arguments, 3);
+            if (cond()) {
+                func.apply(this, args);
+            } else {
+                _.delay.apply(this, [_.retry, wait, func, cond, wait].concat(args));
+            }
+        },
+
+
+        ///Sting functions
+
+        //adds leading zeros to a number, usefull for timecodes 00:00:00
+        leadingZero: function (value) {
+            value = Number(value) | 0;
+            return (value >= 10) ? value : '0' + value;
+        },
+
+        capitalize: function (input) {
+            return input.replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
+        },
+
+        getFileName: function (url, removeParams) {
+            var output = url.substr(url.lastIndexOf('/') + 1);
+
+            if (removeParams && output) {
+                output = output.split("?")[0];
+            }
+
+            if (!output) alert('ERROR URL');
+
+            return output
+        },
+
+        startsWith: function (input, str) {
+
+            if(!input || !str) return false;
+
+            return input.indexOf(str) == 0;
+        },
+
+        removeAfter: function (input, separator) {
+
+            if(!input) return '';
+
+            if (!separator) return input;
+
+            var output = '';
+            output = input.split(separator)[0];
+
+            return output || input;
+        },
+
+
+        ///Objects functions
 
         //Removes undefined properties from object
         compactObject: function (obj, deleteProperty) { //todo accept array
             var clone = _.clone(obj);
             _.each(clone, function (v, k) {
-                if (!v)
+                if (_.isUndefined(v))
                     delete clone[k];
                 else if (deleteProperty && k == deleteProperty) {
                     delete clone[k];
@@ -265,11 +426,9 @@
             );
 
             return result.result ? result.object : defaultValue;
-        },
-        //adds leading zeros to a number, usefull for timecodes 00:00:00
-        leadingZero: function (value) {
-            value = Number(value) | 0;
-            return (value >= 10) ? value : '0' + value;
         }
+
+
+
     });
 })();
