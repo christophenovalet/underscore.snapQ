@@ -1,13 +1,10 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.9'
+//  Version '1.0.10'
 
 (function () {
     _.mixin({
-
-        ///collection functions
-
         //Navigate to the next array item (rotation)
         nextItem: function (array, item) {
             var index = _.indexOf(array, item),
@@ -129,17 +126,6 @@
             }
         },
 
-        match: function (collectionA, collectionB) {
-            if (!_.isArray(collectionA) || !_.isArray(collectionB)) return;
-
-            _.each(collectionA, function (item) {
-                item.$$match = !!_.findWhere(collectionB, {id: item.id});
-            });
-        },
-
-
-        ///Datetime functions
-
         //Move to snapT.js
         //Extracts Hours from date string
         //Formats :  "13 juin 212, 15:00:00" OR "13 juin 212, 3:00:00 PM"
@@ -192,6 +178,19 @@
             return CurrentDate;
         },
 
+        uid: function () {
+            return new Date().getTime();
+        },
+        //to be changed...
+        retry: function (func, cond, wait) {
+            var args = slice.call(arguments, 3);
+            if (cond()) {
+                func.apply(this, args);
+            } else {
+                _.delay.apply(this, [_.retry, wait, func, cond, wait].concat(args));
+            }
+        },
+
         //Returns elapsed seconds or milliseconds between 2 dates
         elapsedTime: function (olderDate, newerDate) {
 
@@ -210,7 +209,6 @@
 
             return dt.toJSON();
         },
-
         //Returns local JSON date without offset
         toJSONLocalDateTime: function (date) {
             var dt = new Date(date);
@@ -219,6 +217,92 @@
 
         toJSONLocalDate: function (date) {
             return _.toJSONLocalDateTime(date).split('T')[0];
+        },
+
+        //Removes undefined properties from object
+        compactObject: function (obj, deleteProperty) { //todo accept array
+            var clone = _.clone(obj);
+            _.each(clone, function (v, k) {
+                if (_.isUndefined(v))
+                    delete clone[k];
+                else if (deleteProperty && k == deleteProperty) {
+                    delete clone[k];
+                }
+            });
+            return clone;
+        },
+
+        // check the existence of a series of nested properties
+        // expressed as a comma-separated string
+        // some kind of recursive hasOwnProperty
+        //
+        // usage: _.hasDeep(myObject,'prop1.prop2.uh');
+        // -> [ true | false ]
+        //
+        // author: boblemarin
+        //
+        hasDeep: function (targetObject, propertyString) {
+            if (!targetObject && !propertyString) return false;
+
+            return (_.reduce(propertyString.split('.'),
+                function (memo, property) {
+                    if (memo.object.hasOwnProperty(property)) {
+                        memo.object = memo.object[property];
+                    } else {
+                        memo.result = false;
+                    }
+                    return memo;
+                }, {
+                    object: targetObject,
+                    result: true
+                }
+            ))['result'];
+        },
+
+        // gets the content of a nested property in the provided object,
+        // or returns the provided default value in case the target property is not defined
+        //
+        // usage: _.valueOrDefault(myObject, 'p1.p2.uh.chose', 'valeur par défault');
+        // -> [ ** | 'valeur par défault']
+        //
+        // author: boblemarin
+        //
+        valueOrDefault: function (targetObject, propertyString, defaultValue) {
+            if (!targetObject && !propertyString) return defaultValue;
+
+            var result = _.reduce(propertyString.split('.'),
+                function (memo, property) {
+                    if (memo.object.hasOwnProperty(property)) {
+                        memo.object = memo.object[property];
+                    } else {
+                        memo.result = false;
+                    }
+                    return memo;
+                }, {
+                    object: targetObject,
+                    result: true
+                }
+            );
+
+            return result.result ? result.object : defaultValue;
+        },
+
+        match: function (collectionA, collectionB) {
+            if (!_.isArray(collectionA) || !_.isArray(collectionB)) return;
+
+            _.each(collectionA, function (item) {
+                item.$$match = !!_.findWhere(collectionB, {id: item.id});
+            });
+        },
+
+        //adds leading zeros to a number, usefull for timecodes 00:00:00
+        leadingZero: function (value) {
+            value = Number(value) | 0;
+            return (value >= 10) ? value : '0' + value;
+        },
+
+        capitalize: function (input) {
+            return input.replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
         },
 
         getMonday: function (date) {
@@ -287,45 +371,6 @@
             return sourceDate.getFullYear() == targetDate.getFullYear();
         },
 
-        tomorrow: function () {
-            var date = new Date();
-            return date.setDate(+1);
-        },
-
-        yesterday: function () {
-            var date = new Date();
-            return date.setDate(-1);
-        },
-
-
-        ///Utility functions
-
-        uid: function () {
-            return new Date().getTime();
-        },
-        //to be changed...
-        retry: function (func, cond, wait) {
-            var args = slice.call(arguments, 3);
-            if (cond()) {
-                func.apply(this, args);
-            } else {
-                _.delay.apply(this, [_.retry, wait, func, cond, wait].concat(args));
-            }
-        },
-
-
-        ///Sting functions
-
-        //adds leading zeros to a number, usefull for timecodes 00:00:00
-        leadingZero: function (value) {
-            value = Number(value) | 0;
-            return (value >= 10) ? value : '0' + value;
-        },
-
-        capitalize: function (input) {
-            return input.replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
-        },
-
         getFileName: function (url, removeParams) {
             var output = url.substr(url.lastIndexOf('/') + 1);
 
@@ -357,78 +402,38 @@
             return output || input;
         },
 
-
-        ///Objects functions
-
-        //Removes undefined properties from object
-        compactObject: function (obj, deleteProperty) { //todo accept array
-            var clone = _.clone(obj);
-            _.each(clone, function (v, k) {
-                if (_.isUndefined(v))
-                    delete clone[k];
-                else if (deleteProperty && k == deleteProperty) {
-                    delete clone[k];
-                }
-            });
-            return clone;
+        tomorrow: function () {
+            var date = new Date();
+            return date.setDate(+1);
         },
 
-        // check the existence of a series of nested properties
-        // expressed as a comma-separated string
-        // some kind of recursive hasOwnProperty
-        //
-        // usage: _.hasDeep(myObject,'prop1.prop2.uh');
-        // -> [ true | false ]
-        //
-        // author: boblemarin
-        //
-        hasDeep: function (targetObject, propertyString) {
-            if (!targetObject && !propertyString) return false;
-
-            return (_.reduce(propertyString.split('.'),
-                function (memo, property) {
-                    if (memo.object.hasOwnProperty(property)) {
-                        memo.object = memo.object[property];
-                    } else {
-                        memo.result = false;
-                    }
-                    return memo;
-                }, {
-                    object: targetObject,
-                    result: true
-                }
-            ))['result'];
+        yesterday: function () {
+            var date = new Date();
+            return date.setDate(-1);
         },
 
-        // gets the content of a nested property in the provided object,
-        // or returns the provided default value in case the target property is not defined
-        //
-        // usage: _.valueOrDefault(myObject, 'p1.p2.uh.chose', 'valeur par défault');
-        // -> [ ** | 'valeur par défault']
-        //
-        // author: boblemarin
-        //
-        valueOrDefault: function (targetObject, propertyString, defaultValue) {
-            if (!targetObject && !propertyString) return defaultValue;
+        getFromLocalStorage: function (key) {
 
-            var result = _.reduce(propertyString.split('.'),
-                function (memo, property) {
-                    if (memo.object.hasOwnProperty(property)) {
-                        memo.object = memo.object[property];
-                    } else {
-                        memo.result = false;
-                    }
-                    return memo;
-                }, {
-                    object: targetObject,
-                    result: true
+            var obj = localStorage.getItem(key);
+
+            if(obj != null){
+                if(obj === 'undefined' || obj === 'Undefined'){
+                    return null;
+                } else {
+                    return JSON.parse(obj);
                 }
-            );
+            }
 
-            return result.result ? result.object : defaultValue;
+            return null;
+
+            //null, "Undefined"
+
+
+        },
+
+        findById: function (collection, id) {
+            return _.findWhere(collection, {id: id});
         }
-
-
 
     });
 })();
