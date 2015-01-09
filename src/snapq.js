@@ -1,7 +1,7 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.10'
+//  Version '1.0.11'
 
 (function () {
     _.mixin({
@@ -79,7 +79,7 @@
         toCommaString: function (array, property, delimiter) {
             property = property || 'id';
             delimiter = delimiter || ',';
-            return  _.pluck(array, property).join(delimiter);
+            return _.pluck(array, property).join(delimiter);
         },
 
         //Toggles array values (usefull for checkbox lists)
@@ -163,7 +163,7 @@
                 console.error('! unable to parse ' + string)
             }
 
-            return{ hh: hh, mm: mm, ss: ss }
+            return {hh: hh, mm: mm, ss: ss}
         },
 
         previousMonth: function (date) {
@@ -199,7 +199,7 @@
 
             var result = (tbDate.getTime() - taDate.getTime());
 
-            return { milliseconds: result, seconds: result / 1000 };
+            return {milliseconds: result, seconds: result / 1000};
         },
 
         toJSONDateTime: function (dateString) {
@@ -385,14 +385,14 @@
 
         startsWith: function (input, str) {
 
-            if(!input || !str) return false;
+            if (!input || !str) return false;
 
             return input.indexOf(str) == 0;
         },
 
         removeAfter: function (input, separator) {
 
-            if(!input) return '';
+            if (!input) return '';
 
             if (!separator) return input;
 
@@ -416,8 +416,8 @@
 
             var obj = localStorage.getItem(key);
 
-            if(obj != null){
-                if(obj === 'undefined' || obj === 'Undefined'){
+            if (obj != null) {
+                if (obj === 'undefined' || obj === 'Undefined') {
                     return null;
                 } else {
                     return JSON.parse(obj);
@@ -433,6 +433,41 @@
 
         findById: function (collection, id) {
             return _.findWhere(collection, {id: id});
+        },
+
+        save: function (collection, data, primaryKey) {
+
+            //define primary key
+            var identifier;
+            if (!primaryKey) {
+                if (data.id) identifier = 'id';
+                else if (data.Id) identifier = 'Id';
+            } else {
+                identifier = primaryKey
+            }
+
+            //check if we are in a save or update situation
+            if (_.has(data, identifier)) {
+                //update => find the obj in the collection
+                var obj = this.findById(collection, data[identifier]);
+
+                if (!obj) {
+                    collection.push(data)
+                }
+
+                //obj = data; //Clone or reference?
+                this.update(data, obj);
+
+            } else {
+                //insert
+                collection.push(data)
+            }
+        },
+
+        update: function (source, destination) {
+            _.each(_.keys(destination), function (key) {
+                destination[key] = source[key];
+            });
         }
 
     });
