@@ -1,10 +1,14 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.11'
+//  Version '1.0.13'
 
 (function () {
     _.mixin({
+        move: function (array, fromIndex, toIndex) {
+            array.splice(toIndex, 0, array.splice(fromIndex, 1)[0]);
+            return array;
+        },
         //Navigate to the next array item (rotation)
         nextItem: function (array, item) {
             var index = _.indexOf(array, item),
@@ -130,42 +134,52 @@
         //Extracts Hours from date string
         //Formats :  "13 juin 212, 15:00:00" OR "13 juin 212, 3:00:00 PM"
         getTime: function (string) {
+
             var hh = '00', mm = '00', ss = '00';
-            var stringArray, hourSection, isPM, splittedHours, lastSection, is24;
 
-            try {
-                //check format
-                stringArray = string.split(' ');
-                lastSection = _.last(stringArray);
+            if (_.isValidDate(string)) {
+                var dt = new Date(string);
+                hh = dt.getHours();
+                mm = dt.getMinutes();
+                ss = dt.getSeconds();
+            } else {
 
-                if (lastSection === 'AM' || lastSection === 'am') {
-                    hourSection = _.previousItem(stringArray, lastSection);
-                } else if (lastSection === 'PM' || lastSection === 'pm') {
-                    hourSection = _.previousItem(stringArray, lastSection);
-                    isPM = true;
-                } else {
-                    hourSection = lastSection;
-                    is24 = true;
+                var stringArray, hourSection, isPM, splittedHours, lastSection, is24;
+
+                try {
+                    //check format
+                    stringArray = string.split(' ');
+                    lastSection = _.last(stringArray);
+
+                    if (lastSection === 'AM' || lastSection === 'am') {
+                        hourSection = _.previousItem(stringArray, lastSection);
+                    } else if (lastSection === 'PM' || lastSection === 'pm') {
+                        hourSection = _.previousItem(stringArray, lastSection);
+                        isPM = true;
+                    } else {
+                        hourSection = lastSection;
+                        is24 = true;
+                    }
+
+                    splittedHours = hourSection.split(':');
+
+                    hh = parseInt(splittedHours[0]);
+
+                    if (!is24 && !isPM && hh === 12) hh = 0; //12am
+                    else if (!is24 && !isPM) {} //12 pm
+                    else if (!is24 && isPM && hh === 12) hh = 12; //12 pm
+                    else if (!is24) hh += 12; //3pm = 15
+
+                    mm = parseInt(splittedHours[1]);
+                    ss = parseInt(splittedHours[2]);
+                } catch (error) {
+                    console.error('! unable to parse ' + string)
                 }
 
-                splittedHours = hourSection.split(':');
-
-                hh = parseInt(splittedHours[0]);
-
-                if (!is24 && !isPM && hh === 12) hh = 0; //12am
-                else if (!is24 && !isPM) {} //12 pm
-                else if (!is24 && isPM && hh === 12) hh = 12; //12 pm
-                else if (!is24) hh += 12; //3pm = 15
-
-                mm = parseInt(splittedHours[1]);
-                ss = parseInt(splittedHours[2]);
-            } catch (error) {
-                console.error('! unable to parse ' + string)
             }
 
             return {hh: hh, mm: mm, ss: ss}
         },
-
         previousMonth: function (date) {
             var CurrentDate = new Date(date);
             CurrentDate.setMonth(CurrentDate.getMonth() - 1);
@@ -214,7 +228,6 @@
             var dt = new Date(date);
             return new Date(dt.addMinutes(-(dt.getTimezoneOffset()))).toJSON();
         },
-
         toJSONLocalDate: function (date) {
             return _.toJSONLocalDateTime(date).split('T')[0];
         },
@@ -300,18 +313,15 @@
             value = Number(value) | 0;
             return (value >= 10) ? value : '0' + value;
         },
-
         capitalize: function (input) {
             return input.replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
         },
-
         getMonday: function (date) {
             var d = new Date(date);
             var day = d.getDay(),
                 diff = d.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
             return new Date(d.setDate(diff)).setHours(0, 0, 0, 0);
         },
-
         getLastSundayOf: function (year) {
             var d = new Date(year, 11, 31);
             if (d.getDay() == 6) {
@@ -320,7 +330,6 @@
                 return _.resetTime(new Date(year, 11, 31 - d.getDay()));
             }
         },
-
         getDayForWeeks: function (startDate, endDate, dayNum) {
 
 
@@ -349,28 +358,37 @@
 
             return mondays;
         },
-
         resetTime: function (date) {
             var d = new Date(date);
             d.setHours(0, 0, 0, 0);
 
             return d;
         },
-
         addDays: function (date, days) {
             var startDate = new Date(date);
             startDate.addDays(days);
             return startDate;
         },
-
         compareMonth: function (sourceDate, targetDate) {
             return sourceDate.getMonth() == targetDate.getMonth() && sourceDate.getFullYear() == targetDate.getFullYear();
         },
-
         compareYear: function (sourceDate, targetDate) {
             return sourceDate.getFullYear() == targetDate.getFullYear();
         },
+        isSameDay: function (sourceDate, targetDate) {
+            sourceDate = new Date(sourceDate);
+            targetDate = new Date(targetDate);
 
+            if (!isNaN(sourceDate.getTime()) && !isNaN(targetDate.getTime())) {
+                return (
+                sourceDate.getFullYear() === targetDate.getFullYear() &&
+                sourceDate.getMonth() === targetDate.getMonth() &&
+                sourceDate.getDate() === targetDate.getDate()
+                )
+            } else {
+                return false;
+            }
+        },
         getFileName: function (url, removeParams) {
             var output = url.substr(url.lastIndexOf('/') + 1);
 
@@ -382,14 +400,12 @@
 
             return output
         },
-
         startsWith: function (input, str) {
 
             if (!input || !str) return false;
 
             return input.indexOf(str) == 0;
         },
-
         removeAfter: function (input, separator) {
 
             if (!input) return '';
@@ -401,6 +417,40 @@
 
             return output || input;
         },
+
+        isValidDate: function (date) {
+            var date = new Date(date);
+            return !isNaN(date.getTime());
+        },
+
+        nullOrDate: function (date) {
+            if (date) return new Date(date);
+            return null;
+        },
+
+        date: function (date) {
+            var output = new Date(date);
+            var timestamp = output.getTime();
+            if (!isNaN(timestamp) && timestamp > 0) return output;
+            return null;
+        },
+
+        emptyIfNull: function (input, object) {
+            if (!object) return '';
+            return input;
+        },
+        toLocalTimestamp: function (d) {
+
+            var date = new Date(d);
+
+            date.setHours(0);
+            date.setMinutes(0);
+            date.setSeconds(0);
+
+            var output = new Date(date.addMinutes(-(date.getTimezoneOffset()))).getTime();
+            return Math.round(output / 1000);
+        },
+
 
         tomorrow: function () {
             var date = new Date();
