@@ -1,7 +1,7 @@
 //  Underscore.snapQ
 //  (c) 2014 Christophe Novalet
 //  Documentation: https://github.com/chsneo/underscore.snapQ
-//  Version '1.0.13'
+//  Version '1.0.14'
 
 (function () {
     _.mixin({
@@ -10,14 +10,17 @@
             return array;
         },
         //Navigate to the next array item (rotation)
-        nextItem: function (array, item) {
+        nextItem: function (array, item, loop) {
             var index = _.indexOf(array, item),
                 length = array.length - 1;
+
+            
 
             if (index < length) {
                 return array[index + 1];
             } else {
-                return _.first(array);
+                if(loop) return _.first(array);
+                else return null;
             }
         },
 
