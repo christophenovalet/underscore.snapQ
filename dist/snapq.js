@@ -10,14 +10,15 @@
             return array;
         },
         //Navigate to the next array item (rotation)
-        nextItem: function (array, item) {
+        nextItem: function (array, item, loop) {
             var index = _.indexOf(array, item),
                 length = array.length - 1;
 
-            if (index < length) {
+         if (index < length) {
                 return array[index + 1];
             } else {
-                return _.first(array);
+                if(loop) return _.first(array);
+                else return null;
             }
         },
 
