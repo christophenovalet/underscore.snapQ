@@ -23,13 +23,14 @@
         },
 
         //Navigate to the previous array item (rotation)
-        previousItem: function (array, item) {
+        previousItem: function (array, item, loop) {
             var index = _.indexOf(array, item);
 
             if (index > 0) {
                 return array[index - 1];
             } else {
-                return _.last(array);
+                if(loop) return  _.last(array);
+                else return null;
             }
         },
 
